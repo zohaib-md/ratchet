@@ -1,0 +1,3 @@
+host: prod-db.internal
+port: 5432
+ssl: true

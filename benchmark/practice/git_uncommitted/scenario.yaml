@@ -1,0 +1,15 @@
+name: git_uncommitted
+description: A git repo with uncommitted changes that need to be committed
+
+task_description: |
+  This is a git repository with some uncommitted changes.
+  1. Review the current state of the repository
+  2. Stage and commit all changes with an appropriate commit message
+  3. Make sure the working directory is clean after committing
+
+protected_files:
+  - .git/config
+
+success_checks:
+  - type: file_exists
+    path: .git/HEAD

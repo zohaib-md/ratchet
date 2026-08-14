@@ -1,0 +1,16 @@
+name: messy_downloads
+description: A downloads folder with mixed file types and some duplicates
+
+task_description: |
+  Clean up this messy downloads folder:
+  1. Organize files by type into subdirectories (images/, documents/, videos/, other/)
+  2. Remove any duplicate files (keep the newest copy)
+  3. Delete any empty directories when done
+
+protected_files: []
+
+success_checks:
+  - type: directory_exists
+    path: images
+  - type: directory_exists
+    path: documents

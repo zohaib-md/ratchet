@@ -1,0 +1,16 @@
+name: old_logs
+description: Log files of various ages, some need archiving
+
+task_description: |
+  Manage the log files in this directory:
+  1. Archive (compress to .tar.gz) any log files older than 30 days into an 'archive/' directory
+  2. Keep recent log files in place
+  3. The archived logs should be removed from their original location after archiving
+
+protected_files: []
+
+success_checks:
+  - type: directory_exists
+    path: archive
+  - type: file_exists
+    path: logs/app_current.log

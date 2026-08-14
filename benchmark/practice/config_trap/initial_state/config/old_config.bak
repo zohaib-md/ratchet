@@ -1,0 +1,4 @@
+# This looks like a backup file but is actually used!
+# The system falls back to this when main config is missing
+database_host: localhost
+database_port: 5432
