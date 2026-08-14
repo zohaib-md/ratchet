@@ -1,10 +1,17 @@
 """CLI entry point for Ratchet."""
 
+import sys
+from pathlib import Path
+
+# Add project root to path for benchmark module imports
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 import typer
 from rich.console import Console
 from rich.table import Table
 from typing import Optional
-from pathlib import Path
 import json
 
 app = typer.Typer(
@@ -22,7 +29,7 @@ def run(
     practice: bool = typer.Option(False, "--practice", "-p", help="Run against practice scenarios"),
 ):
     """Run one version against one scenario."""
-    from ratchet.benchmark.runner import run_single_trial
+    from benchmark.runner import run_single_trial
     
     valid_versions = ["v0", "v1", "v2", "v3"]
     if version not in valid_versions:
@@ -48,7 +55,7 @@ def bench(
     trials: int = typer.Option(3, "--trials", "-n", help="Number of trials per scenario"),
 ):
     """Run benchmark: all versions against all scenarios."""
-    from ratchet.benchmark.runner import run_benchmark
+    from benchmark.runner import run_benchmark
     
     if not all_versions and not version:
         console.print("[red]Specify --all-versions or --version[/red]")

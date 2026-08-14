@@ -57,6 +57,7 @@ def run_agent_loop(
         if not assistant_message.tool_calls:
             content = assistant_message.content or ""
             if _claims_done(content):
+                tracer.end_turn()
                 if config.version == "v3":
                     done_result = config.handle_done_claim(content, sandbox_path)
                     if done_result["verified"]:
@@ -72,6 +73,7 @@ def run_agent_loop(
                 else:
                     termination_reason = "agent_claimed_done"
                     break
+            tracer.end_turn()
             continue
         
         tool_results = []
@@ -123,6 +125,7 @@ def run_agent_loop(
         
         messages.extend(tool_results)
         tracer.log_tool_results(tool_results)
+        tracer.end_turn()
         
         if termination_reason == "verified_done":
             break
