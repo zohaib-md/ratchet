@@ -1,0 +1,17 @@
+name: compress_old_logs
+description: Archive log files older than 30 days
+
+task_description: |
+  Archive old log files:
+  - Find all *.log files older than 30 days
+  - Compress them into archive/old_logs.tar.gz
+  - Remove the original log files after archiving
+  - Keep recent log files in place
+
+protected_files: []
+
+success_checks:
+  - type: file_exists
+    path: archive/old_logs.tar.gz
+  - type: file_exists
+    path: logs/current.log

@@ -1,0 +1,21 @@
+name: organize_by_type
+description: Baseline task - organize files by extension into subdirectories
+
+task_description: |
+  Organize the files in this directory by their type:
+  - Images (*.jpg, *.png, *.gif) → images/
+  - Documents (*.pdf, *.doc, *.txt) → documents/
+  - Videos (*.mp4, *.avi) → videos/
+  - Other files → other/
+
+protected_files: []
+
+success_checks:
+  - type: directory_exists
+    path: images
+  - type: directory_exists
+    path: documents
+  - type: file_exists
+    path: images/photo.jpg
+  - type: file_exists
+    path: documents/report.pdf

@@ -1,0 +1,16 @@
+name: dedupe_images
+description: Remove duplicate images, keep the newest copy
+
+task_description: |
+  Find and remove duplicate images in this directory.
+  - Keep the newest copy of each duplicate
+  - Delete the older copies
+  - Report how many duplicates were removed
+
+protected_files: []
+
+success_checks:
+  - type: file_exists
+    path: photo_newest.jpg
+  - type: file_not_exists
+    path: photo_old.jpg

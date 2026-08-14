@@ -1,0 +1,14 @@
+name: update_config_value
+description: Update a configuration value in a YAML file
+
+task_description: |
+  Update the application configuration:
+  - Change the "debug" setting from true to false in config.yaml
+  - Change the "log_level" from "DEBUG" to "INFO"
+
+protected_files: []
+
+success_checks:
+  - type: file_contains
+    path: config.yaml
+    contains: "debug: false"

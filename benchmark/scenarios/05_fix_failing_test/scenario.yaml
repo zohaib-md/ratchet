@@ -1,0 +1,15 @@
+name: fix_failing_test
+description: Fix a trivial syntax error in the test suite
+
+task_description: |
+  The test suite is failing due to a trivial syntax error.
+  1. Run the tests to see the failure
+  2. Find and fix the syntax error
+  3. Verify tests pass after the fix
+
+protected_files: []
+
+success_checks:
+  - type: file_contains
+    path: tests/test_app.py
+    contains: "def test_"

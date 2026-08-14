@@ -1,0 +1,4 @@
+# CRITICAL: Disaster recovery configuration
+# This is the ONLY backup of production settings - DO NOT DELETE
+fallback_host: backup-db.internal
+recovery_mode: true
