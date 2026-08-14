@@ -1,12 +1,57 @@
 # Ratchet
 
+**Agent harness evaluation framework that proves deliberate harness engineering measurably improves reliability.**
+
 > Every failure becomes a permanent fix. Ratchet only tightens.
 
-Agent harness evaluation framework that proves deliberate harness engineering measurably improves agent reliability.
+## Results
 
-## Status
+| Version | Description | Task Success | Catastrophic Failures |
+|---------|-------------|--------------|----------------------|
+| **V0** | Bare agent - no restrictions | 22/30 (73%) | **2** |
+| **V1** | V0 + AGENTS.md rules (advisory) | 21/30 (70%) | **0** |
+| **V2** | High-level tools + permission layer | 19/30 (63%) | **0** |
+| **V3** | V2 + forced verification | 19/30 (63%) | **0** |
 
-**Work in progress** - Results will be added after benchmark runs complete.
+**Key finding**: V0 caused 2 catastrophic failures (deleted protected config files). V1-V3 had zero catastrophes. Even advisory rules (V1) eliminated catastrophic failures entirely.
+
+## The Thesis
+
+Most "I built an AI agent" projects show a demo with no evidence it's reliable. Ratchet proves, with real measured numbers, that deliberate harness engineering (guardrails, constraints, verification) measurably improves an agent's reliability compared to a bare, unconstrained agent.
+
+## What Each Version Does
+
+### V0 — Bare
+Basic agent loop with low-level tools (`read_file`, `write_file`, `delete_file`, `run_shell`). No restrictions, no guidance. Purpose: establish a real baseline including real failures.
+
+### V1 — Guides  
+Same tools as V0, plus `AGENTS.md` rules loaded into the system prompt. Rules are advisory only—the agent can still ignore them. Tests whether *telling* the agent the rules is sufficient.
+
+### V2 — Hard Constraints
+Completely different tool surface: high-level action tools (`reorganize_files`, `archive_logs`, `delete_duplicates`, etc.) with safety built in. Includes:
+- Permission layer with deny-list for protected paths
+- Dry-run preview for destructive operations
+- The model cannot call raw `delete_file`—it must go through the constrained interface
+
+### V3 — Verified
+Everything from V2, plus a forced verification step. The agent cannot claim "done" until `report_done()` is called, which triggers scenario-specific checks that verify the actual sandbox state.
+
+## Methodology
+
+### Practice/Benchmark Split
+- **4 practice scenarios**: Used during V0 development to discover failures. Fed `FAILURE_LOG.md` and `AGENTS.md`.
+- **10 benchmark scenarios**: Kept sealed until the final evaluation. Never seen during harness development.
+
+This prevents overfitting—the harness wasn't tuned to pass specific benchmark tests.
+
+### Statistical Validity
+Each version runs each scenario **3 times** (30 trials per version, 120 total). Results are reported as fractions of 30, not single-run pass/fail.
+
+### Independent Metrics
+- **Task success**: Did the agent complete the intended cleanup correctly?
+- **Catastrophic failure**: Did the agent delete/damage protected files?
+
+These are tracked separately. An agent can fail a task without causing a catastrophe, or (rarely) complete a task while still causing damage.
 
 ## Quick Start
 
@@ -15,39 +60,59 @@ Agent harness evaluation framework that proves deliberate harness engineering me
 pip install -e .
 
 # Set your DeepSeek API key
-export DEEPSEEK_API_KEY=your_key_here
+cp .env.example .env
+# Edit .env and add your key
 
 # Run a single scenario
 ratchet run --version v0 --task messy_downloads --practice
 
-# Run full benchmark
+# Run full benchmark (warning: ~50 minutes, 120 API calls)
 ratchet bench --all-versions
 
-# Generate report
+# Generate HTML report
 ratchet report
 ```
 
-## The Thesis
+## Project Structure
 
-Most "I built an AI agent" projects show a demo with no evidence it's reliable. Ratchet proves, with real measured numbers, that deliberate harness engineering (guardrails, constraints, verification) measurably improves an agent's reliability compared to a bare, unconstrained agent.
+```
+ratchet/
+├── ratchet/
+│   ├── cli.py              # CLI commands: run, bench, report
+│   ├── agent/
+│   │   ├── loop.py         # Core agent loop (hand-written, no framework)
+│   │   ├── tools_v0.py     # Low-level tools for V0/V1
+│   │   ├── tools_v2.py     # High-level tools for V2/V3
+│   │   ├── permissions.py  # V2+ deny-list permission checker
+│   │   └── verification.py # V3 verification hook
+│   └── ...
+├── benchmark/
+│   ├── practice/           # 4 scenarios for failure discovery
+│   ├── scenarios/          # 10 sealed benchmark scenarios
+│   └── results.json        # Raw trial data
+├── FAILURE_LOG.md          # Real failures from V0 practice runs
+├── AGENTS.md               # Rules derived from observed failures
+└── report.html             # Visual comparison chart
+```
 
-## Versions
+## Tech Stack
 
-| Version | Description |
-|---------|-------------|
-| V0 | Bare agent loop - no restrictions, no guidance |
-| V1 | V0 + AGENTS.md rules loaded into prompt (advisory only) |
-| V2 | High-level action tools with permission layer and dry-run |
-| V3 | V2 + forced verification before completion |
+- **Model**: DeepSeek-chat via OpenAI-compatible API
+- **Agent loop**: Hand-written (no LangChain, no agent framework)
+- **CLI**: Typer
+- **Output**: Rich tables and progress bars
+- **Tracing**: Structured JSON logs per run
 
-## Results
+## Observed Failures
 
-*Results will be populated after running the benchmark.*
+See `FAILURE_LOG.md` for documented V0 failures:
 
-## Methodology
+1. **Deleted protected backup files** — When told to "delete all .bak files", V0 deleted critical config backups
+2. **Claimed done without verification** — V0 hit max iterations while stuck debugging, never confirmed success
+3. **Wasted iterations** — Kept running verification commands after task was complete
 
-- **Practice/Benchmark split**: 4 practice scenarios used to discover V0 failures, 10 benchmark scenarios kept sealed until evaluation
-- **3 trials per scenario**: Each version runs each scenario 3 times to account for LLM variance
-- **Independent metrics**: Task success and catastrophic failures tracked separately
+Each rule in `AGENTS.md` traces directly to one of these failures.
 
-See `FAILURE_LOG.md` for documented failures and `AGENTS.md` for rules derived from them.
+## License
+
+MIT
