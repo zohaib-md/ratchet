@@ -124,10 +124,6 @@ Most agent benchmarks measure capability (can the agent solve this task?). I wan
 
 The "ratchet" idea is that every observed failure should become a permanent fix—either a rule the agent sees or a constraint it can't bypass. The harness should only tighten.
 
-## Development note
-
-This project was built with AI coding tools (Cursor). The experiment design, analysis, and documentation reflect my own decisions about what to test and how to interpret results.
-
 ## License
 
 MIT
