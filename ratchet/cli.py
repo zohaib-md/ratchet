@@ -16,7 +16,7 @@ import json
 
 app = typer.Typer(
     name="ratchet",
-    help="Agent harness evaluation framework. Every failure becomes a permanent fix.",
+    help="Benchmark for testing whether agent harness constraints reduce dangerous actions.",
     no_args_is_help=True,
 )
 console = Console()
