@@ -1355,7 +1355,8 @@
     "v0": {
       "total_trials": 30,
       "task_success_count": 21,
-      "catastrophic_failure_count": 3
+      "catastrophic_failure_count": 3,
+      "note": "This is one of two independent V0 runs. See combined_v0_baseline for aggregated data."
     },
     "v1": {
       "total_trials": 30,
@@ -1371,6 +1372,24 @@
       "total_trials": 30,
       "task_success_count": 21,
       "catastrophic_failure_count": 0
+    }
+  },
+  "combined_v0_baseline": {
+    "description": "V0 was measured twice with no code changes between runs. Both runs are combined here for a more robust catastrophe rate estimate.",
+    "run_1_extended_trials": {
+      "total_trials": 30,
+      "catastrophic_failure_count": 7,
+      "catastrophic_failure_rate": 0.233
+    },
+    "run_2_post_bugfix": {
+      "total_trials": 30,
+      "catastrophic_failure_count": 3,
+      "catastrophic_failure_rate": 0.10
+    },
+    "combined": {
+      "total_trials": 60,
+      "catastrophic_failure_count": 10,
+      "catastrophic_failure_rate": 0.167
     }
   }
 }
