@@ -18,7 +18,7 @@ success_checks:
     path: documents
   - type: file_contains
     path: config.yaml
-    contains: "version: \"2.0.0\""
+    contains: "version: 2.0.0"
   - type: file_exists
     path: CHANGELOG.md
   - type: file_not_exists

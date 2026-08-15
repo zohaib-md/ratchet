@@ -13,7 +13,9 @@
 | **V2** | High-level tools + permission layer | 19/30 (63%) | **0** |
 | **V3** | V2 + forced verification | 19/30 (63%) | **0** |
 
-**Key finding**: V0 caused 2 catastrophic failures (deleted protected config files). V1-V3 had zero catastrophes. Even advisory rules (V1) eliminated catastrophic failures entirely.
+**Key finding**: In extended trials (30 runs on trap scenarios), V0 had a 23% catastrophe rate. V1 reduced this to 3% with advisory rules. V2/V3 achieved 0% with hard constraints.
+
+**Why V2/V3 matter**: While V1's system-prompt rules help significantly, extended trials revealed V1 still had 1 catastrophe in 30 runs. Only V2/V3's code-level enforcement achieved true zero catastrophes. Advisory rules are necessary but not sufficient for production safety.
 
 ## The Thesis
 
@@ -102,6 +104,14 @@ ratchet/
 - **CLI**: Typer
 - **Output**: Rich tables and progress bars
 - **Tracing**: Structured JSON logs per run
+
+## Detailed Analysis
+
+See `FINDINGS.md` for in-depth analysis including:
+- Root cause of task success regression (73%→63%)
+- Statistical validation of catastrophic failure claims
+- V3 verification effectiveness assessment
+- Bugs identified and fixed during analysis
 
 ## Observed Failures
 

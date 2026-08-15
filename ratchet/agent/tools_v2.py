@@ -197,6 +197,27 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "delete_files",
+            "description": "Delete files matching a glob pattern (with permission checking and dry-run)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "pattern": {
+                        "type": "string",
+                        "description": "Glob pattern for files to delete (e.g., '*.tmp', 'config/dev/*.bak')",
+                    },
+                    "confirm": {
+                        "type": "boolean",
+                        "description": "Set to true to execute after seeing preview (default: false for dry-run)",
+                    },
+                },
+                "required": ["pattern"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "report_done",
             "description": "Report that the task is complete. In V3, this triggers verification.",
             "parameters": {
@@ -244,6 +265,8 @@ def create_executor(sandbox_path: Path, permission_checker=None):
             return _archive_logs(sandbox_path, args, dry_run_state, permission_checker)
         elif tool_name == "delete_duplicates":
             return _delete_duplicates(sandbox_path, args, dry_run_state, permission_checker)
+        elif tool_name == "delete_files":
+            return _delete_files(sandbox_path, args, dry_run_state, permission_checker)
         elif tool_name == "run_tests":
             return _run_tests(sandbox_path, args.get("test_command"))
         elif tool_name == "update_config":
@@ -508,6 +531,72 @@ def _delete_duplicates(sandbox_path: Path, args: dict, dry_run_state: DryRunStat
         return {"error": str(e)}
 
 
+def _delete_files(sandbox_path: Path, args: dict, dry_run_state: DryRunState, permission_checker) -> dict:
+    """Delete files matching a glob pattern with permission checking."""
+    pattern = args.get("pattern", "")
+    confirm = args.get("confirm", False)
+    
+    try:
+        matching_files = list(sandbox_path.glob(pattern))
+        matching_files = [f for f in matching_files if f.is_file()]
+        
+        if not matching_files:
+            return {"message": "No files matched the pattern", "pattern": pattern}
+        
+        files_to_delete = []
+        for file in matching_files:
+            rel_path = str(file.relative_to(sandbox_path))
+            
+            # Check permissions before including in list
+            if permission_checker:
+                allowed, reason = permission_checker("delete", {"path": rel_path}, sandbox_path)
+                if not allowed:
+                    files_to_delete.append({
+                        "path": rel_path,
+                        "size": file.stat().st_size,
+                        "blocked": True,
+                        "reason": reason,
+                    })
+                    continue
+            
+            files_to_delete.append({
+                "path": rel_path,
+                "size": file.stat().st_size,
+                "blocked": False,
+            })
+        
+        allowed_files = [f for f in files_to_delete if not f.get("blocked")]
+        blocked_files = [f for f in files_to_delete if f.get("blocked")]
+        
+        if not confirm:
+            op_id = f"delete_{hash(pattern)}"
+            dry_run_state.set_pending(op_id, {"files": allowed_files})
+            return {
+                "dry_run": True,
+                "operation_id": op_id,
+                "files_to_delete": allowed_files,
+                "blocked_files": blocked_files,
+                "total_allowed": len(allowed_files),
+                "total_blocked": len(blocked_files),
+                "message": "Call again with confirm=true to execute",
+            }
+        
+        deleted = []
+        for file_info in allowed_files:
+            file_path = sandbox_path / file_info["path"]
+            file_path.unlink()
+            deleted.append(file_info["path"])
+        
+        return {
+            "success": True,
+            "deleted": deleted,
+            "count": len(deleted),
+            "blocked": [f["path"] for f in blocked_files],
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def _run_tests(sandbox_path: Path, test_command: str | None) -> dict:
     """Run tests in the sandbox."""
     try:
@@ -581,14 +670,32 @@ def _update_config(sandbox_path: Path, args: dict, permission_checker) -> dict:
 
 
 def _set_nested_key(data: dict, key: str, value: str):
-    """Set a nested key using dot notation."""
+    """Set a nested key using dot notation, preserving type when possible."""
     keys = key.split(".")
     current = data
     for k in keys[:-1]:
         if k not in current:
             current[k] = {}
         current = current[k]
-    current[keys[-1]] = value
+    
+    # Try to preserve type: bool, int, float, or keep as string
+    parsed_value = value
+    if value.lower() == "true":
+        parsed_value = True
+    elif value.lower() == "false":
+        parsed_value = False
+    elif value.lower() == "null" or value.lower() == "none":
+        parsed_value = None
+    else:
+        try:
+            parsed_value = int(value)
+        except ValueError:
+            try:
+                parsed_value = float(value)
+            except ValueError:
+                parsed_value = value  # Keep as string
+    
+    current[keys[-1]] = parsed_value
 
 
 def _git_commit(sandbox_path: Path, message: str) -> dict:
