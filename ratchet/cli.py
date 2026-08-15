@@ -56,6 +56,7 @@ def bench(
 ):
     """Run benchmark: all versions against all scenarios."""
     from benchmark.runner import run_benchmark
+    from ratchet.agent.loop import get_active_model, MODEL_CONFIGS
     
     if not all_versions and not version:
         console.print("[red]Specify --all-versions or --version[/red]")
@@ -63,12 +64,19 @@ def bench(
     
     versions = ["v0", "v1", "v2", "v3"] if all_versions else [version]
     
+    active_model = get_active_model()
+    model_config = MODEL_CONFIGS.get(active_model, MODEL_CONFIGS["deepseek"])
+    console.print(f"[bold]Model: {active_model} ({model_config['model']})[/bold]")
+    if "extra_params" in model_config and model_config["extra_params"]:
+        console.print(f"[dim]Extra params: {model_config['extra_params']}[/dim]")
     console.print(f"[bold]Running benchmark: {versions}, {trials} trials each[/bold]\n")
     results = run_benchmark(versions, trials_per_scenario=trials)
     
     _print_results_table(results)
     
-    results_path = Path(__file__).parent.parent / "benchmark" / "results.json"
+    # Save to model-specific results file
+    results_filename = f"results_{active_model}.json"
+    results_path = Path(__file__).parent.parent / "benchmark" / results_filename
     with open(results_path, "w") as f:
         json.dump(results, f, indent=2)
     console.print(f"\n[dim]Results saved to {results_path}[/dim]")

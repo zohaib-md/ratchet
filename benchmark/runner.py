@@ -7,7 +7,7 @@ from datetime import datetime
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
-from ratchet.agent.loop import run_agent_loop
+from ratchet.agent.loop import run_agent_loop, get_active_model
 from ratchet.agent.versions import create_version_config
 from ratchet.agent.verification import check_no_catastrophic_failure
 from ratchet.sandbox.manager import SandboxManager
@@ -75,9 +75,12 @@ def run_benchmark(
         console.print("[red]No benchmark scenarios found![/red]")
         return {"error": "No scenarios found"}
     
+    active_model = get_active_model()
+    
     results = {
         "metadata": {
             "timestamp": datetime.utcnow().isoformat() + "Z",
+            "model": active_model,
             "versions": versions,
             "scenarios": scenarios,
             "trials_per_scenario": trials_per_scenario,

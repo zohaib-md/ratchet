@@ -1,15 +1,43 @@
 """Core agent loop shared across versions."""
 
 import json
+import os
 from openai import OpenAI
 from typing import Callable
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from ratchet.agent.versions import VersionConfig
 from ratchet.logging.tracer import Tracer
 
+# Load .env file from project root
+_project_root = Path(__file__).parent.parent.parent
+load_dotenv(_project_root / ".env")
+
 
 MAX_ITERATIONS = 10
+
+# Model configurations
+MODEL_CONFIGS = {
+    "deepseek": {
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-chat",
+        "api_key_env": "DEEPSEEK_API_KEY",
+        "extra_params": {},
+    },
+    "gemini": {
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model": "gemini-2.5-flash",  # Using 2.5 - good OpenAI compatibility with function calling
+        "api_key_env": "GEMINI_API_KEY",
+        "extra_params": {},
+    },
+}
+
+
+def get_active_model() -> str:
+    """Get the active model from environment variable."""
+    return os.environ.get("RATCHET_MODEL", "deepseek")
 
 
 def run_agent_loop(
@@ -23,13 +51,23 @@ def run_agent_loop(
     
     Returns outcome dict with task_success, catastrophic_failure, etc.
     """
+    active_model = get_active_model()
+    model_config = MODEL_CONFIGS.get(active_model, MODEL_CONFIGS["deepseek"])
+    
+    api_key = os.environ.get(model_config["api_key_env"], "")
+    if not api_key:
+        raise ValueError(f"{model_config['api_key_env']} environment variable not set")
+    
     client = OpenAI(
-        api_key=config.api_key,
-        base_url="https://api.deepseek.com",
+        api_key=api_key,
+        base_url=model_config["base_url"],
     )
     
     system_prompt = _build_system_prompt(config, task_description, sandbox_path)
-    messages = [{"role": "system", "content": system_prompt}]
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": "Please complete the task described above. Begin by examining the sandbox directory."},
+    ]
     
     tools = config.get_tool_definitions()
     tool_executor = config.get_tool_executor(sandbox_path)
@@ -40,10 +78,11 @@ def run_agent_loop(
         tracer.start_turn(turn)
         
         request_payload = {
-            "model": "deepseek-chat",
+            "model": model_config["model"],
             "messages": messages,
             "tools": tools if tools else None,
             "tool_choice": "auto" if tools else None,
+            **model_config.get("extra_params", {}),
         }
         tracer.log_request(request_payload)
         

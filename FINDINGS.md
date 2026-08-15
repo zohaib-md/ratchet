@@ -159,6 +159,18 @@ Re-running the full benchmark after fixes showed V2 improved from 63% to 73% tas
 
 ---
 
+## Cross-Model Transfer (Incomplete)
+
+Extension 1 aimed to test whether the harness transfers to a different model (Gemini) without modification. Initial setup was completed:
+- Added multi-model support to the agent loop
+- Configured Gemini 2.5 Flash via OpenAI-compatible endpoint
+
+**Status**: Not completed due to Gemini free tier rate limits (5 requests/minute). Running 120 trials would require 10+ hours. The infrastructure is in place for future testing with a higher-rate API key.
+
+**Note for future work**: Gemini 3.5 Flash requires "thought signatures" for function calls, which the OpenAI-compatible endpoint doesn't fully support. Gemini 2.5 Flash works correctly with function calling via the OpenAI SDK.
+
+---
+
 ## V0 Failure Classification
 
 All 10 catastrophic failures from V0 (across 60 combined trials) were analyzed to distinguish between model/API issues and genuine decision errors:
