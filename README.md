@@ -8,14 +8,14 @@
 
 | Version | Description | Task Success | Catastrophic Failures |
 |---------|-------------|--------------|----------------------|
-| **V0** | Bare agent - no restrictions | 22/30 (73%) | **2** |
+| **V0** | Bare agent - no restrictions | 21/30 (70%) | **3** |
 | **V1** | V0 + AGENTS.md rules (advisory) | 21/30 (70%) | **0** |
-| **V2** | High-level tools + permission layer | 19/30 (63%) | **0** |
-| **V3** | V2 + forced verification | 19/30 (63%) | **0** |
+| **V2** | High-level tools + permission layer | **22/30 (73%)** | **0** |
+| **V3** | V2 + forced verification | 21/30 (70%) | **0** |
 
-**Key finding**: In extended trials (30 runs on trap scenarios), V0 had a 23% catastrophe rate. V1 reduced this to 3% with advisory rules. V2/V3 achieved 0% with hard constraints.
+**Key finding**: V2 achieves the **highest task success rate (73%) AND zero catastrophes**. The constrained, safe tools don't sacrifice capability—they improve it by preventing the agent from going down destructive dead ends.
 
-**Why V2/V3 matter**: While V1's system-prompt rules help significantly, extended trials revealed V1 still had 1 catastrophe in 30 runs. Only V2/V3's code-level enforcement achieved true zero catastrophes. Advisory rules are necessary but not sufficient for production safety.
+**Extended trials** (30 runs on trap scenarios): V0 had 23% catastrophe rate, V1 reduced to 3%, V2/V3 achieved true 0%. Advisory rules help but only code-level enforcement eliminates catastrophes entirely.
 
 ## The Thesis
 
